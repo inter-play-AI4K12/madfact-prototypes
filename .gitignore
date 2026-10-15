@@ -1,0 +1,11 @@
+# Lens Studio generated files and local settings
+**/Cache/
+**/Workspaces/
+**/PluginsUserPreferences/
+**/*.lock
+**/Backup*/
+**/node_modules/
+.DS_Store
+.env
+.env.*
+!.env.example
