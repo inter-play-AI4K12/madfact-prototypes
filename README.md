@@ -2,6 +2,24 @@
 
 Experimental representations and interactions for MadFact.
 
+## Web prototypes
+
+Three standalone React + TypeScript + Vite applications extracted from the embodied matrix factorization site:
+
+| Project | Original route | Representation |
+| --- | --- | --- |
+| [tower-bars](tower-bars/) | `/tangible` | Target and prediction towers |
+| [balance](balance/) | `/balance` | Hinged cells with bars or solid edge weights |
+| [color-filters](color-filters/) | `/` | Blue/yellow color filters |
+
+Each project has its own dependencies, lockfile, and README. Requires Node.js 22.13+.
+From a project directory, run `npm ci`, then `npm run dev`. Use `npm run typecheck`
+and `npm run build` to verify it; Balance also includes `npm test`.
+Deploy a generated `dist/` directory to a static host. No shared backend or Sites account is required.
+
+The web Balance prototype includes whole-number ground truth and doubled cell tilt.
+The Spectacles implementation below is a separate prototype with its own representation controls.
+
 ## Spectacles: Balance and Tangible
 
 Open `spectacles/BalanceXR/BalanceXR.esproj` in **Lens Studio 5.15.4**.
