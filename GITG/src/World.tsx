@@ -8,7 +8,7 @@ import { createRentalRoom } from "./RentalRoom";
 import ui from "./game.module.css";
 type FactorKind = 'rows' | 'cols';
 type Card = {id:string; name:string; image:string};
-export type SceneAPI = {view:(name:string)=>void; zoom:(factor:number)=>void};
+export type SceneAPI = {view:(name:string)=>void; zoom:(factor:number)=>void; reset:()=>void};
 type Props = {
  cells:{truth:number; prediction:number}[]; selected:number; onSelect:(index:number)=>void;
  apiRef:React.RefObject<SceneAPI|null>; mode:Mode; active:{kind:FactorKind;index:number;factor?:number}|null;
@@ -25,10 +25,10 @@ export default function World(props:Props){
   const el=host.current!;let renderer:THREE.WebGLRenderer;
   try{renderer=new THREE.WebGLRenderer({antialias:true});}catch{queueMicrotask(()=>setError('This device could not start 3D. Enable WebGL or try another browser.'));return;}
   renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));renderer.setClearColor(0x343c3a);renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;
-  renderer.domElement.setAttribute('aria-label','3D balance matrix. Drag to orbit above the desk. Scroll or pinch to zoom. Tap a tile or its handles to select it.');el.appendChild(renderer.domElement);
+  renderer.domElement.setAttribute('aria-label','3D balance matrix. Drag to orbit. Right-drag to move around the room. Scroll or pinch to zoom. Tap a tile or its handles to select it.');el.appendChild(renderer.domElement);
   const scene=new THREE.Scene();scene.fog=new THREE.Fog(0x343c3a,48,90);
   const camera=new THREE.PerspectiveCamera(40,1,.1,80);camera.position.set(-9,14,19);
-  const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(-.8,2,.8);controls.enableDamping=true;controls.minDistance=9;controls.maxDistance=30;controls.maxPolarAngle=Math.PI/2-.04;controls.enablePan=false;
+  const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(-.8,2,.8);controls.enableDamping=true;controls.minDistance=9;controls.maxDistance=30;controls.maxPolarAngle=Math.PI/2-.04;controls.enablePan=true;controls.screenSpacePanning=true;controls.saveState();
   scene.add(new THREE.HemisphereLight(0xffebd1,0x50463d,.75));
   const light=new THREE.DirectionalLight(0xffd8a5,2.1);light.position.set(-12,16,8);light.castShadow=true;light.shadow.mapSize.set(2048,2048);Object.assign(light.shadow.camera,{left:-9,right:9,top:10,bottom:-10});light.shadow.bias=-.0002;light.shadow.normalBias=.025;light.shadow.intensity=.6;scene.add(light);
   const materials:THREE.Material[]=[],geometries:THREE.BufferGeometry[]=[],textures:THREE.Texture[]=[];
@@ -136,18 +136,18 @@ export default function World(props:Props){
    const value=Math.round(THREE.MathUtils.clamp((point[slider.axis]-slider.start)/(slider.end-slider.start),0,1)*100)/100;
    live.current.onFactor(slider.kind,slider.index,slider.factor,value);live.current.onActive({kind:slider.kind,index:slider.index,factor:slider.factor});
   }
-  const down=(e:PointerEvent)=>{const slider=live.current.evaluated?null:sliderHit(e);if(slider){e.preventDefault();e.stopImmediatePropagation();dragging=slider;controls.enabled=false;renderer.domElement.setPointerCapture(e.pointerId);adjust(e,slider);return;}start={x:e.clientX,y:e.clientY};};
-  const up=(e:PointerEvent)=>{if(dragging){e.stopImmediatePropagation();dragging=null;controls.enabled=true;if(renderer.domElement.hasPointerCapture(e.pointerId))renderer.domElement.releasePointerCapture(e.pointerId);live.current.onActive(null);return;}if(Math.hypot(e.clientX-start.x,e.clientY-start.y)>6)return;const index=hit(e);if(index>=0)live.current.onSelect(index);};
+  const down=(e:PointerEvent)=>{if(e.button!==0)return;const slider=live.current.evaluated?null:sliderHit(e);if(slider){e.preventDefault();e.stopImmediatePropagation();dragging=slider;controls.enabled=false;renderer.domElement.setPointerCapture(e.pointerId);adjust(e,slider);return;}start={x:e.clientX,y:e.clientY};};
+  const up=(e:PointerEvent)=>{if(e.button===2)return;if(dragging){e.stopImmediatePropagation();dragging=null;controls.enabled=true;if(renderer.domElement.hasPointerCapture(e.pointerId))renderer.domElement.releasePointerCapture(e.pointerId);live.current.onActive(null);return;}if(Math.hypot(e.clientX-start.x,e.clientY-start.y)>6)return;const index=hit(e);if(index>=0)live.current.onSelect(index);};
   const move=(e:PointerEvent)=>{if(dragging){e.preventDefault();e.stopImmediatePropagation();adjust(e,dragging);return;}const slider=live.current.evaluated?null:sliderHit(e);if(slider){hoveringControl=true;hovered=-1;renderer.domElement.style.cursor='ew-resize';live.current.onActive({kind:slider.kind,index:slider.index,factor:slider.factor});return;}if(hoveringControl){hoveringControl=false;live.current.onActive(null);}hovered=hit(e);renderer.domElement.style.cursor=hovered>=0?'pointer':'grab';};const leave=()=>{hovered=-1;if(!dragging)live.current.onActive(null);};
   const cancel=(e:PointerEvent)=>{if(dragging)up(e);};
   renderer.domElement.addEventListener('pointerdown',down,true);renderer.domElement.addEventListener('pointerup',up,true);renderer.domElement.addEventListener('pointermove',move,true);renderer.domElement.addEventListener('pointerleave',leave);renderer.domElement.addEventListener('pointercancel',cancel,true);
   const resize=()=>{const w=el.clientWidth,h=el.clientHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();};const observer=new ResizeObserver(resize);observer.observe(el);resize();
-  apiRef.current={zoom(factor){camera.position.sub(controls.target).multiplyScalar(factor).add(controls.target);controls.update();},view(name){controls.target.set(-.8,2,.8);camera.position.set(...(name==='top'?[-.8,21,.81]:name==='front'?[-.8,9,21]:name==='side'?[-21,9,.8]:[-9,14,19]) as [number,number,number]);controls.update();}};
+  apiRef.current={reset(){controls.reset();},zoom(factor){camera.position.sub(controls.target).multiplyScalar(factor).add(controls.target);controls.update();},view(name){controls.target.set(-.8,2,.8);camera.position.set(...(name==='top'?[-.8,21,.81]:name==='front'?[-.8,9,21]:name==='side'?[-21,9,.8]:[-9,14,19]) as [number,number,number]);controls.update();}};
   let lastPose='',lastTime=0;
   function recordCamera(now:number,force=false){
    if(!force&&now-lastTime<300)return;
    const round=(v:number)=>Number(v.toFixed(3));
-   const pose={azimuth:round(controls.getAzimuthalAngle()),polar:round(controls.getPolarAngle()),distance:round(controls.getDistance()),position:camera.position.toArray().map(round)};
+   const pose={azimuth:round(controls.getAzimuthalAngle()),polar:round(controls.getPolarAngle()),distance:round(controls.getDistance()),position:camera.position.toArray().map(round),target:controls.target.toArray().map(round)};
    const key=JSON.stringify(pose);
    if(key!==lastPose){live.current.onCamera(pose);lastPose=key;lastTime=now;}
   }
