@@ -1,0 +1,4 @@
+node_modules/
+dist/
+.data/
+.openai/local.env
