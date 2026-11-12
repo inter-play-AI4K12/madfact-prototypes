@@ -20,7 +20,9 @@ export function paintRatings(ctx:CanvasRenderingContext2D,mode:Mode,truth:number
  [truth,pred].forEach((v,j)=>{
   if(j===0&&hidden)return;
   const color=muted?(j?'#8d969e':'#afb6be'):j?(held?'#8241bf':'#eeab17'):'#1874ca';
-  const label=j?'Guess':'Rated', value=j?v.toFixed(2):String(Math.round(v));
+  // Cell numbers omit the fixed base star, like the four-star display.
+  const shown=v-1;
+  const label=j?'Guess':'Rated', value=j?shown.toFixed(2):String(Math.round(shown));
   ctx.fillStyle=color;
   if(mode==='stars'){
    // Every rating starts at 1; display only the four variable stars.
