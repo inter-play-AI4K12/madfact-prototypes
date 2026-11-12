@@ -4,12 +4,13 @@ Experimental representations and interactions for MadFact.
 
 ## Web prototypes
 
-Three standalone React + TypeScript + Vite applications extracted from the embodied matrix factorization site:
+Four standalone React + TypeScript + Vite applications extracted from the embodied matrix factorization site:
 
 | Project | Original route | Representation |
 | --- | --- | --- |
 | [tower-bars](tower-bars/) | `/tangible` | Target and prediction towers |
 | [balance](balance/) | `/balance` | Hinged cells with bars or solid edge weights |
+| [balance-new](balance-new/) | `/balance-new` | Balance with stationary 3D sliders on the left and bottom of the desk |
 | [color-filters](color-filters/) | `/` | Blue/yellow color filters |
 
 Each project has its own dependencies, lockfile, and README. Requires Node.js 22.13+.
@@ -58,3 +59,4 @@ The current source has compiled in Lens Studio. Visual behavior still needs vali
 
 The project includes Snap's Spectacles Interaction Kit package and a font asset bundled with Lens Studio.
 Third-party assets remain subject to their respective terms. This repository does not grant additional rights to those assets.
+
