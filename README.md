@@ -4,13 +4,14 @@ Experimental representations and interactions for MadFact.
 
 ## Web prototypes
 
-Four standalone React + TypeScript + Vite applications extracted from the embodied matrix factorization site:
+Five standalone React + TypeScript + Vite applications extracted from the embodied matrix factorization site:
 
 | Project | Original route | Representation |
 | --- | --- | --- |
 | [tower-bars](tower-bars/) | `/tangible` | Target and prediction towers |
 | [balance](balance/) | `/balance` | Hinged cells with bars or solid edge weights |
 | [balance-new](balance-new/) | `/balance-new` | Balance with stationary 3D sliders on the left and bottom of the desk |
+| [GITG](GITG/) | `/GITG` | Movie recommendation challenge with two held-out ratings and participant logs |
 | [color-filters](color-filters/) | `/` | Blue/yellow color filters |
 
 Each project has its own dependencies, lockfile, and README. Requires Node.js 22.13+.
