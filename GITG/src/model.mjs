@@ -45,7 +45,7 @@ export function alsStep(truths,rows,cols,phase='rows') {
  return {rows:rows.map(p=>p.slice()),cols:cols.map((pair,c)=>solveBoundedPair(rows,rows.map((_,r)=>(truths[r*5+c]-1)/2),pair))};
 }
 export function squaredError(cells){return cells.reduce((sum,c)=>sum+(c.prediction-c.truth)**2,0);}
-export function errorColor(error){return `hsl(${120*(1-Math.min(1,Math.abs(error)/MAX_ERROR))}, 65%, 65%)`;}
+export function errorColor(error){return `hsl(${120*(1-Math.min(1,Math.abs(error)/MAX_ERROR))}, 85%, 56%)`;}
 
 // Bounded coordinate least squares: change exactly one handle per visible step.
 export function handleStep(truths,rows,cols,step) {

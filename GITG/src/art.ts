@@ -79,48 +79,71 @@ export const people: IllustratedIdentity[] = [
   }),
 ];
 
-function poster(id: string, name: string, art: string, colors: [string, string], lines: string[]): IllustratedIdentity {
-  const title = lines.map((line, i) => `<text x="80" y="${165 + i * 16}" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-size="17" letter-spacing="1" fill="${colors[1]}">${line}</text>`).join('');
-  return {
-    id, name,
-    image: svgImage(160, 198, `
-      <rect width="160" height="198" fill="${colors[0]}"/>
-      ${art}
-      <rect x="5" y="5" width="150" height="188" rx="2" stroke="${colors[1]}" fill="none" opacity=".6"/>
-      ${title}
-    `),
-  };
+// Original vector posters: each film has its own composition, typography and palette.
+function film(id:string,name:string,art:string):IllustratedIdentity {
+ return {id,name,image:svgImage(240,330,art)};
 }
-
-export const movies: IllustratedIdentity[] = [
-  poster('moon-run', 'Moon Run', `
-    <circle cx="108" cy="48" r="30" fill="#f8c87e"/><g fill="#ffe0ac"><circle cx="23" cy="40" r="2"/><circle cx="45" cy="23" r="1.5"/><circle cx="130" cy="94" r="2"/><circle cx="68" cy="67" r="1.5"/><path d="M121 20l2 5 5 2-5 1-2 5-1-5-4-1 4-2z"/></g>
-    <g transform="rotate(36 74 88)"><path d="M64 111l10 29 10-29z" fill="#fa815b"/><path d="M70 110l4 21 5-21z" fill="#ffdb84"/><path d="M67 82l-12 19v15l13-10m13-24 13 19v15l-14-10" fill="#ea6d63"/><path d="M65 110q-8-36 9-58 18 21 9 58z" fill="#f3e5c1"/><circle cx="74" cy="81" r="6" fill="#334864" stroke="#e18160" stroke-width="3"/></g>
-    <path d="M6 139q38-10 71 0 39 11 77-13v20H6z" fill="#656486"/><path d="M6 145q45-17 86-2 31 9 62-10v15H6z" fill="#473e65"/>
-  `, ['#292644', '#ffe5b7'], ['MOON', 'RUN']),
-  poster('tide-song', 'Tide Song', `
-    <circle cx="101" cy="52" r="33" fill="#f7bc7b"/><circle cx="101" cy="52" r="25" fill="none" stroke="#ffe0a1" stroke-width="2"/>
-    <path d="M5 107q23-49 54-38 21 7 22 22-10-10-24-6-16 6-14 18 3 18 22 21 39 5 88-27v48H5z" fill="#56b6ae"/><path d="M5 107q28-44 54-35 12 3 18 13-20-12-35 2-19 17-2 32-23-4-35 8z" fill="#d3f1d2"/>
-    <path d="M5 135q29-16 55-7 29 9 55-5 20-10 40-25v47H5z" fill="#258788"/><path d="M6 139q34-14 56-6 35 10 74-12" fill="none" stroke="#8dd4c0" stroke-width="2"/>
-    <g stroke="#254c62" stroke-width="2.5" fill="none" stroke-linecap="round"><path d="M30 40q7-5 13 2 4-7 11-6m46 36q5-4 10 1 3-5 8-4"/></g>
-  `, ['#184c62', '#fff1cc'], ['TIDE', 'SONG']),
-  poster('wild-signal', 'Wild Signal', `
-    <circle cx="81" cy="63" r="39" fill="#dfaa5b"/><path d="M5 113l33-54 19 32 21-36 31 49 15-22 31 47v17H5z" fill="#86a071"/>
-    <path d="M6 132l24-38 19 25 26-32 20 22 23-33 36 49v20H6z" fill="#46766a"/>
-    <path d="M5 139l22-11 30 9 37-13 28 5 33-11v28H5z" fill="#285852"/>
-    <g stroke="#f7d295" fill="none" stroke-width="2.8" stroke-linecap="round"><path d="M83 113V68m-9 45 9-32 9 32m-17-10h15"/><path d="M75 63q8-8 16 0m-21-6q13-13 26 0m-32-7q19-17 38 0"/></g>
-    <g fill="#1c413e"><path d="M15 123l10-22 10 22h-6l9 13H12l9-13zM118 118l7-16 8 16h-5l7 10h-20l7-10z"/></g>
-  `, ['#223e39', '#ffe2a5'], ['WILD', 'SIGNAL']),
-  poster('sky-circuit', 'Sky Circuit', `
-    <circle cx="115" cy="45" r="23" fill="#ffa674"/><g fill="none" stroke="#a9dbed" opacity=".8" stroke-width="2"><path d="M6 36h50m-21 6h44m22 47h49M9 100h31"/></g>
-    <path d="M6 118l29-17 20 12 29-25 33 25 37-22v52H6z" fill="#73699a"/>
-    <path d="M6 132q40-43 82-7 40 33 66-16v19q-30 32-63 14-42-29-85 3z" fill="#de916f"/><path d="M8 138q43-36 82-6 38 28 62-10" fill="none" stroke="#ffe1af" stroke-width="2" stroke-dasharray="7 6"/>
-    <g transform="translate(77 75) rotate(-17)"><path d="M-36 2l18-1 13-19 8-1-4 19 20 1 11-7 7 1-9 12-21 3-10 13-6-1 3-14-23-1z" fill="#fff0c8"/><path d="M-35 3l25 4 24-2-14 6-25-1z" fill="#e96465"/></g>
-  `, ['#3c446f', '#ffebbd'], ['SKY', 'CIRCUIT']),
-  poster('last-lantern', 'Last Lantern', `
-    <circle cx="80" cy="78" r="50" fill="#483c51"/><circle cx="80" cy="78" r="36" fill="#79534f"/><g fill="#e6bd7e"><circle cx="30" cy="49" r="2"/><circle cx="130" cy="30" r="1.8"/><circle cx="135" cy="99" r="2"/><circle cx="40" cy="114" r="1.5"/></g>
-    <path d="M80 15v22m-8 10v-6a8 8 0 0116 0v6" stroke="#f5c781" stroke-width="3" fill="none"/>
-    <path d="M64 49l8-5h16l8 5 7 9H57z" fill="#d39360"/><path d="M60 58h40l-4 37-10 8H74l-11-8z" fill="#f9c776" stroke="#9e694d" stroke-width="3"/><path d="M77 62l-1 32m10-32 1 32" stroke="#efae68" stroke-width="2"/><path d="M80 72q7 9 5 18-3 8-9 2-3-5 4-20z" fill="#fff0ab"/><path d="M65 97h30l-6 9H72z" fill="#ce945e"/>
-    <g fill="#29293c"><path d="M7 25l16 28-6-1 16 28-8-2 15 27-11-1 20 29-29-2v14H5zM154 47l-13 23 6-2-14 26 7-2-17 23 12-2-21 23h27v10h14z"/></g>
-  `, ['#282940', '#ffdda3'], ['LAST', 'LANTERN']),
+export const movies:IllustratedIdentity[] = [
+ film('after-hours','After Hours',`
+  <rect width="240" height="330" fill="#13181e"/>
+  <path d="M109 0h73v330h-73z" fill="#e6e1d7"/>
+  <path d="M116 0l-7 330h-7L109 0z" fill="#a7a49b"/>
+  <g fill="#151a20"><path d="M0 147h49V65h30v126h30v139H0zM182 45h24v80h34v205h-58z"/>
+  <path d="M141 156q13-1 15 12l3 36 16 66h-17l-14-46-3 48h-15l2-69-2-31q-1-12 15-16z"/><circle cx="141" cy="141" r="11"/></g>
+  <path d="M130 272l-20 58h63l-22-58" fill="#151a20" opacity=".5"/>
+  <text x="20" y="42" fill="#e5e1d7" font-family="Arial,sans-serif" font-size="9" letter-spacing="3">THE CITY NEVER TELLS.</text>
+  <g fill="#ef5147" font-family="Arial Narrow,Arial,sans-serif" font-weight="900" font-size="53" letter-spacing="-3">
+   <text x="17" y="108">AFTER</text><text x="17" y="154">HOURS</text>
+  </g>
+  <path d="M20 291h58" stroke="#ef5147" stroke-width="3"/>
+  <text x="20" y="312" fill="#c2c4c1" font-family="Arial,sans-serif" font-size="8" letter-spacing="2">A FILM BY LENA REED</text>
+ `),
+ film('peach-season','Peach Season',`
+  <rect width="240" height="330" fill="#f8cfb3"/>
+  <path d="M0 240Q62 193 125 228T240 218V330H0z" fill="#f26b49"/>
+  <g transform="translate(129 168) rotate(-14)">
+   <ellipse cx="-27" cy="8" rx="43" ry="49" fill="#e9503f"/><ellipse cx="25" cy="8" rx="43" ry="49" fill="#ff925a"/>
+   <path d="M1-35Q-10-64 4-77" fill="none" stroke="#5e553a" stroke-width="7"/>
+   <path d="M4-53q8-40 51-26Q43-43 4-53" fill="#387460"/>
+   <path d="M-2-28Q-17 5 1 48" fill="none" stroke="#d84a37" stroke-width="2"/>
+  </g>
+  <text x="19" y="30" fill="#6e412f" font-family="Arial,sans-serif" font-size="9" letter-spacing="2">A VERY ORDINARY SUMMER.</text>
+  <text x="17" y="89" fill="#a93632" font-family="Georgia,serif" font-size="54" font-style="italic" letter-spacing="-3">Peach</text>
+  <text x="20" y="271" fill="#fff4d9" font-family="Georgia,serif" font-size="45" font-style="italic" letter-spacing="-2">Season</text>
+  <text x="21" y="310" fill="#722f27" font-family="Arial,sans-serif" font-size="8" letter-spacing="2">SOME THINGS TAKE THEIR TIME.</text>
+ `),
+ film('the-long-way-home','The Long Way Home',`
+  <defs><linearGradient id="sky" x2="0" y2="1"><stop stop-color="#d7e1da"/><stop offset="1" stop-color="#f0ddbe"/></linearGradient></defs>
+  <rect width="240" height="330" fill="#eee9dc"/>
+  <rect x="14" y="58" width="212" height="207" fill="url(#sky)"/>
+  <path d="M14 154l40-22 28 9 54-39 40 28 50-17v152H14z" fill="#839889"/>
+  <path d="M14 195l37-25 46 18 40-30 41 22 48-27v112H14z" fill="#4e7063"/>
+  <path d="M14 227q54-50 112-7t100-15v60H14z" fill="#294b41"/>
+  <path d="M144 173q-20 24 1 41t-2 51h-34q51-39 22-54t13-38" fill="#d5c5a1"/>
+  <path d="M125 257l8-16" stroke="#f8ebc9" stroke-width="2"/>
+  <rect x="125" y="225" width="8" height="12" rx="2" fill="#c5533d"/>
+  <text x="120" y="29" text-anchor="middle" fill="#566452" font-family="Arial,sans-serif" font-size="8" letter-spacing="3">THERE IS NO SHORTCUT.</text>
+  <text x="120" y="288" text-anchor="middle" fill="#293f34" font-family="Georgia,serif" font-size="17">The Long Way Home</text>
+  <text x="120" y="311" text-anchor="middle" fill="#667263" font-family="Arial,sans-serif" font-size="7" letter-spacing="2">A FILM BY EMI PARK</text>
+ `),
+ film('ninety-nine-seconds','99 Seconds',`
+  <rect width="240" height="330" fill="#f55b27"/>
+  <path d="M0 183L240 47v52L0 235z" fill="#171f24"/>
+  <path d="M0 253L240 117v6L0 260zm0 20L240 137v3L0 276z" fill="#ffd8aa"/>
+  <text x="15" y="29" fill="#1b2326" font-family="Arial,sans-serif" font-size="9" font-weight="700" letter-spacing="3">EVERY SECOND COUNTS.</text>
+  <text x="6" y="190" fill="#f7eddc" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="155" letter-spacing="-16">99</text>
+  <text x="15" y="235" fill="#f7eddc" font-family="Arial,sans-serif" font-size="30" font-weight="900" letter-spacing="1">SECONDS</text>
+  <g fill="#172125"><path d="M96 265l17-15h50l23 15h8v14H87v-14z"/><circle cx="111" cy="280" r="9"/><circle cx="171" cy="280" r="9"/></g>
+  <path d="M38 272h39m-21-8h25" stroke="#172125" stroke-width="3"/>
+  <text x="15" y="315" fill="#172125" font-family="Arial,sans-serif" font-size="8" letter-spacing="2">NO PAUSE. NO SECOND TAKE.</text>
+ `),
+ film('a-small-miracle','A Small Miracle',`
+  <rect width="240" height="330" fill="#e6dfc6"/>
+  <path d="M196 0h44v330h-44z" fill="#6f7b54"/>
+  <text x="222" y="300" transform="rotate(-90 222 300)" fill="#eee8d1" font-family="Arial,sans-serif" font-size="10" letter-spacing="4">A FILM BY ALEX RIVERS</text>
+  <g fill="none" stroke="#45684b" stroke-width="3"><path d="M93 293q40-74 9-156M108 238q-44-5-54-34 41-1 54 34M111 209q37-6 47-36-39 4-47 36M109 174q-31-1-39-24 31-4 39 24"/></g>
+  <g fill="#b07459"><ellipse cx="102" cy="119" rx="12" ry="27"/><ellipse cx="102" cy="119" rx="12" ry="27" transform="rotate(60 102 119)"/><ellipse cx="102" cy="119" rx="12" ry="27" transform="rotate(120 102 119)"/></g><circle cx="102" cy="119" r="10" fill="#e6b254"/>
+  <g fill="#354b37" font-family="Georgia,serif" font-weight="400"><text x="18" y="40" font-size="20">A Small</text><text x="18" y="70" font-size="32" font-style="italic">Miracle</text></g>
+  <text x="18" y="315" fill="#5c6750" font-family="Arial,sans-serif" font-size="7" letter-spacing="1.5">LOOK A LITTLE CLOSER.</text>
+ `),
 ];

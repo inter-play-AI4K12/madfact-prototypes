@@ -4,7 +4,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { matrixAngle, cellAngle, errorColor } from "./model.mjs";
 import { paintRatings } from "./ratings";
 import type { Mode } from "./ratings";
-import { shelves } from "./rentalShelf";
+import { createRentalRoom } from "./RentalRoom";
 import ui from "./game.module.css";
 type FactorKind = 'rows' | 'cols';
 type Card = {id:string; name:string; image:string};
@@ -24,42 +24,25 @@ export default function World(props:Props){
  useEffect(()=>{
   const el=host.current!;let renderer:THREE.WebGLRenderer;
   try{renderer=new THREE.WebGLRenderer({antialias:true});}catch{queueMicrotask(()=>setError('This device could not start 3D. Enable WebGL or try another browser.'));return;}
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));renderer.setClearColor(0xe9d9c1);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));renderer.setClearColor(0x343c3a);renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;
   renderer.domElement.setAttribute('aria-label','3D balance matrix. Drag to orbit above the desk. Scroll or pinch to zoom. Tap a tile or its handles to select it.');el.appendChild(renderer.domElement);
-  const scene=new THREE.Scene();scene.fog=new THREE.Fog(0xe9d9c1,24,45);
-  const camera=new THREE.PerspectiveCamera(40,1,.1,80);camera.position.set(-5,17,15);
+  const scene=new THREE.Scene();scene.fog=new THREE.Fog(0x343c3a,48,90);
+  const camera=new THREE.PerspectiveCamera(40,1,.1,80);camera.position.set(-9,14,19);
   const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(-.8,2,.8);controls.enableDamping=true;controls.minDistance=9;controls.maxDistance=30;controls.maxPolarAngle=Math.PI/2-.04;controls.enablePan=false;
-  scene.add(new THREE.HemisphereLight(0xfff4de,0x968173,2.2));
-  const light=new THREE.DirectionalLight(0xffefd4,3.1);light.position.set(-5,13,8);light.castShadow=true;light.shadow.mapSize.set(2048,2048);Object.assign(light.shadow.camera,{left:-9,right:9,top:10,bottom:-10});light.shadow.bias=-.001;scene.add(light);
+  scene.add(new THREE.HemisphereLight(0xffebd1,0x50463d,.75));
+  const light=new THREE.DirectionalLight(0xffd8a5,2.1);light.position.set(-12,16,8);light.castShadow=true;light.shadow.mapSize.set(2048,2048);Object.assign(light.shadow.camera,{left:-9,right:9,top:10,bottom:-10});light.shadow.bias=-.0002;light.shadow.normalBias=.025;light.shadow.intensity=.6;scene.add(light);
   const materials:THREE.Material[]=[],geometries:THREE.BufferGeometry[]=[],textures:THREE.Texture[]=[];
   function material(color:number,metalness=.05){const m=new THREE.MeshStandardMaterial({color,roughness:.55,metalness});materials.push(m);return m;}
-  const navy=material(0x193e60,.5),floorMat=material(0x82776a);
+  const navy=material(0x193e60,.5);
   function box(parent:THREE.Object3D,w:number,h:number,d:number,x:number,y:number,z:number,m:THREE.Material){const g=new THREE.BoxGeometry(w,h,d);geometries.push(g);const mesh=new THREE.Mesh(g,m);mesh.position.set(x,y,z);mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh;}
-  function label(text:string,parent:THREE.Object3D,x:number,y:number,z:number,width=1.1){const cv=document.createElement('canvas');cv.width=256;cv.height=64;const ctx=cv.getContext('2d')!;ctx.fillStyle='#193e60';ctx.font='bold 28px Arial';ctx.textAlign='center';ctx.fillText(text,128,42);const tx=new THREE.CanvasTexture(cv);textures.push(tx);const mt=new THREE.SpriteMaterial({map:tx,depthWrite:false});materials.push(mt);const sprite=new THREE.Sprite(mt);sprite.scale.set(width,width/4,1);sprite.position.set(x,y,z);parent.add(sprite);}
   // The tabletop keeps the original slider plane and board pivot.
-  box(scene,160,.12,160,0,-3.72,0,floorMat);
+  const room=createRentalRoom(scene,renderer);
   const oak=material(0xaa7750), darkWood=material(0x70503c);
   box(scene,13.8,.36,13.1,-1,-.10,1.25,oak);
   box(scene,13.1,.045,12.4,-1,.095,1.25,material(0xf1e8d8));
   for(const x of [-7.26,5.26])for(const z of [-4.67,7.17]){
    box(scene,.38,3.42,.38,x,-1.97,z,darkWood);
   }
-  // The aisle sits beyond the board and drops out of view when orbiting behind it.
-  const aisle=new THREE.Group();scene.add(aisle);
-  const shelfFrame=material(0x71513e),lampMetal=material(0x3b4946);
-  const glow=new THREE.MeshBasicMaterial({color:0xffdf9a});materials.push(glow);
-  for(const [bay,image] of shelves.entries()){
-   const x=(bay-1)*6.28;
-   box(aisle,6.24,6.5,1.05,x,-.4,-10.3,shelfFrame);
-   const map=new THREE.TextureLoader().load(image);
-   map.colorSpace=THREE.SRGBColorSpace;map.anisotropy=renderer.capabilities.getMaxAnisotropy();textures.push(map);
-   const face=new THREE.MeshStandardMaterial({map,roughness:.85});materials.push(face);
-   box(aisle,6.04,5.7,.04,x,-.12,-9.75,face);
-   box(aisle,5.95,.18,.65,x,2.87,-9.55,lampMetal);
-   box(aisle,5.68,.08,.12,x,2.81,-9.19,glow);
-  }
-  const aisleLight=new THREE.PointLight(0xffce8a,85,26,2);
-  aisleLight.position.set(0,5,-7);aisle.add(aisleLight);
   box(scene,.23,3.35,.5,-3.5,1.75,0,navy);box(scene,.23,3.35,.5,3.5,1.75,0,navy);
   // The shared axle is the parent pivot, underneath the complete board.
   const matrix=new THREE.Group();matrix.position.y=3.42;scene.add(matrix);
@@ -68,20 +51,22 @@ export default function World(props:Props){
   box(board,.14,.28,.14,-3.25,-.14,0,navy);box(board,.14,.28,.14,3.25,-.14,0,navy);
   box(board,6.7,.12,.12,0,0,-3.25,navy);box(board,6.7,.12,.12,0,0,3.25,navy);
   box(board,.12,.12,6.5,-3.25,0,0,navy);box(board,.12,.12,6.5,3.25,0,0,navy);
-  label('NORTH',board,0,.15,-3.65,1.2);label('SOUTH',board,0,.15,3.65,1.2);label('WEST',board,-3.85,.15,0,.9);label('EAST',board,3.85,.15,0,.9);
   // Controls belong to the stationary desk, outside the rotating matrix hierarchy.
   const deskControls=new THREE.Group();scene.add(deskControls);
   const sliderPlane=new THREE.Plane(new THREE.Vector3(0,1,0),-.2);
-  type DeskSlider={kind:FactorKind;index:number;factor:number;axis:'x'|'z';start:number;end:number;thumb:THREE.Mesh;fill:THREE.Mesh;mat:THREE.MeshStandardMaterial;hit:THREE.Mesh;ctx:CanvasRenderingContext2D;texture:THREE.CanvasTexture;signature:string};
+  type DeskSlider={kind:FactorKind;index:number;factor:number;axis:'x'|'z';start:number;end:number;thumb:THREE.Mesh;fill:THREE.Mesh;mat:THREE.MeshStandardMaterial;hit:THREE.Mesh};
   const sliders:DeskSlider[]=[];
-  const fColors=[0xd06742,0x7653bc];
-  function deskText(text:string,x:number,z:number,w:number,d:number){
-   const canvas=document.createElement('canvas');canvas.width=512;canvas.height=128;const ctx=canvas.getContext('2d')!;
-   const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;textures.push(texture);
-   const m=new THREE.MeshBasicMaterial({map:texture,transparent:true,depthWrite:false});materials.push(m);
-   const g=new THREE.PlaneGeometry(w,d);geometries.push(g);const mesh=new THREE.Mesh(g,m);mesh.rotation.x=-Math.PI/2;mesh.position.set(x,.24,z);deskControls.add(mesh);
-   ctx.fillStyle='#193e60';ctx.textAlign='center';ctx.font='bold 42px Arial';ctx.fillText(text,256,82);texture.needsUpdate=true;
-   return {ctx,texture};
+  const fColors=[0xed5b9d,0x28343d];
+  function cardName(name:string,x:number,z:number,w:number,h:number){
+   const canvas=document.createElement('canvas');canvas.width=512;canvas.height=192;
+   const ctx=canvas.getContext('2d')!;ctx.fillStyle='#26363d';ctx.fillRect(0,0,512,192);
+   const lines:string[]=[];let line='';
+   for(const word of name.split(' ')){if(line&&(line+' '+word).length>13){lines.push(line);line=word;}else line+=(line?' ':'')+word;}lines.push(line);
+   ctx.fillStyle='#fff4dd';ctx.textAlign='center';ctx.textBaseline='middle';ctx.font=`bold ${lines.length>1?54:70}px Arial`;
+   lines.forEach((text,i)=>ctx.fillText(text,256,96+(i-(lines.length-1)/2)*64,490));
+   const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;texture.anisotropy=renderer.capabilities.getMaxAnisotropy();textures.push(texture);
+   const m=new THREE.MeshBasicMaterial({map:texture,toneMapped:false});materials.push(m);
+   const g=new THREE.PlaneGeometry(w,h);geometries.push(g);const mesh=new THREE.Mesh(g,m);mesh.rotation.x=-Math.PI/2;mesh.position.set(x,.26,z);deskControls.add(mesh);
   }
   // Each card stays with its factor controls when the board tilts.
   let disposed=false;
@@ -100,25 +85,26 @@ export default function World(props:Props){
    const center=(index-2)*1.25;
    if(kind==='rows'){
     box(deskControls,2.55,.08,1.13,-4.6,.13,center,material(0xe3eaf3));
-    const card=live.current.people[index]; cardImage(card,-6.42,center,.95,.95); deskText(card.name,-4.6,center-.42,2,.31);
+    const card=live.current.people[index]; cardImage(card,-6.42,center,.95,.95);cardName(card.name,-6.42,center+.63,1.04,.25);
    }else{
     box(deskControls,1.13,.08,2.2,center,.13,4.35,material(0xe3eaf3));
-    const card=live.current.movies[index]; cardImage(card,center,6.10,.93,1.28); deskText(card.name,center,5.25,1.22,.33);
+    const card=live.current.movies[index]; cardImage(card,center,6.10,.93,1.28);cardName(card.name,center,7.03,1.15,.48);
    }
    for(let factor=0;factor<2;factor++){
     const axis=kind==='rows'?'x':'z',cx=kind==='rows'?-4.6:center+(factor===0?-.25:.25),cz=kind==='rows'?center+(factor===0?-.09:.29):4.23;
-    const length=kind==='rows'?1.7:1.03,start=(axis==='x'?cx:cz)-length/2,end=start+length;
+    const length=kind==='rows'?1.7:1.03;
+    // South controls grow from the viewer toward the board (negative Z).
+    const start=axis==='x'?cx-length/2:cz+length/2,end=axis==='x'?cx+length/2:cz-length/2;
     box(deskControls,axis==='x'?length:.08,.04,axis==='z'?length:.08,cx,.2,cz,material(0xa9b8ca));
     const fill=box(deskControls,axis==='x'?1:.08,.045,axis==='z'?1:.08,cx,.205,cz,material(fColors[factor]));
     const mat=material(fColors[factor],.25),thumb=box(deskControls,.21,.13,.21,cx,.27,cz,mat);
     const hitMat=new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false});materials.push(hitMat);
     const hit=box(deskControls,axis==='x'?length+.3:.42,.08,axis==='z'?length+.3:.32,cx,.25,cz,hitMat);
-    const text=deskText('',kind==='rows'?-3.47:cx,kind==='rows'?cz:5.03,kind==='rows'?.48:.52,.24);
-    sliders.push({kind,index,factor,axis,start,end,thumb,fill,mat,hit,...text,signature:''});
+    sliders.push({kind,index,factor,axis,start,end,thumb,fill,mat,hit});
    }
   }
   const handleGeometry=new THREE.SphereGeometry(.085,12,8);geometries.push(handleGeometry);
-  type Tile={group:THREE.Group;plate:THREE.Mesh;weights:THREE.Mesh[];decal:THREE.Mesh;handles:THREE.Mesh[];hinge:THREE.Mesh;mat:THREE.MeshStandardMaterial;handleMat:THREE.MeshStandardMaterial;ctx:CanvasRenderingContext2D;texture:THREE.CanvasTexture;signature:string;truth:number;prediction:number};
+  type Tile={group:THREE.Group;plate:THREE.Mesh;weights:THREE.Mesh[];decal:THREE.Mesh;handles:THREE.Mesh[];hinge:THREE.Mesh;mat:THREE.MeshBasicMaterial;handleMat:THREE.MeshStandardMaterial;ctx:CanvasRenderingContext2D;texture:THREE.CanvasTexture;signature:string;truth:number;prediction:number};
   const tiles:Tile[]=[];
   function paint(tile:Tile,index:number){
    const state=live.current, held=state.hidden.includes(index);
@@ -130,14 +116,16 @@ export default function World(props:Props){
   }
   for(let i=0;i<25;i++){
    const group=new THREE.Group();group.position.set((i%5-2)*1.25,-.1,(Math.floor(i/5)-2)*1.25);board.add(group);
-   const mat=material(0xb9bec5),handleMat=material(0x63809b,.35);
+   // Tile colors encode error: keep their hues independent of the room lighting.
+   const mat=new THREE.MeshBasicMaterial({color:0xb9bec5,toneMapped:false});materials.push(mat);
+   const handleMat=material(0x63809b,.35);
    mat.polygonOffset=true;mat.polygonOffsetFactor=1;mat.polygonOffsetUnits=1;
    const plate=box(group,1.05,.095,1.05,0,.1,0,mat);plate.userData.cell=i;
    const weights=[0x1479ed,0xffc52e].map(color=>{const mesh=box(group,1.05,.097,1,0,.1,0,material(color));mesh.userData.cell=i;mesh.visible=false;return mesh;});
    const hinge=box(group,1.22,.055,.055,0,0,0,handleMat);
    const handles=[-.6,.6].map(x=>{const mesh=new THREE.Mesh(handleGeometry,handleMat);mesh.position.set(x,0,0);mesh.userData.cell=i;mesh.castShadow=true;group.add(mesh);return mesh;});
    const canvas=document.createElement('canvas');canvas.width=512;canvas.height=512;const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;textures.push(texture);
-   const decalMaterial=new THREE.MeshBasicMaterial({map:texture,transparent:true,depthWrite:false,side:THREE.DoubleSide});materials.push(decalMaterial);const geometry=new THREE.PlaneGeometry(1.01,1.01);geometries.push(geometry);const decal=new THREE.Mesh(geometry,decalMaterial);decal.rotation.x=-Math.PI/2;decal.position.y=.15;decal.userData.cell=i;group.add(decal);
+   const decalMaterial=new THREE.MeshBasicMaterial({map:texture,transparent:true,depthWrite:false,side:THREE.DoubleSide,toneMapped:false});materials.push(decalMaterial);const geometry=new THREE.PlaneGeometry(1.01,1.01);geometries.push(geometry);const decal=new THREE.Mesh(geometry,decalMaterial);decal.rotation.x=-Math.PI/2;decal.position.y=.15;decal.userData.cell=i;group.add(decal);
    const cell=live.current.cells[i];const tile={group,plate,weights,decal,handles,hinge,mat,handleMat,ctx:canvas.getContext('2d')!,texture,signature:'',truth:cell.truth,prediction:cell.prediction};paint(tile,i);tiles.push(tile);
   }
   const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();let start={x:0,y:0},hovered=-1;
@@ -154,7 +142,7 @@ export default function World(props:Props){
   const cancel=(e:PointerEvent)=>{if(dragging)up(e);};
   renderer.domElement.addEventListener('pointerdown',down,true);renderer.domElement.addEventListener('pointerup',up,true);renderer.domElement.addEventListener('pointermove',move,true);renderer.domElement.addEventListener('pointerleave',leave);renderer.domElement.addEventListener('pointercancel',cancel,true);
   const resize=()=>{const w=el.clientWidth,h=el.clientHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();};const observer=new ResizeObserver(resize);observer.observe(el);resize();
-  apiRef.current={zoom(factor){camera.position.sub(controls.target).multiplyScalar(factor).add(controls.target);controls.update();},view(name){controls.target.set(-.8,2,.8);camera.position.set(...(name==='top'?[-.8,21,.81]:name==='front'?[-.8,9,21]:name==='side'?[-21,9,.8]:[-5,17,15]) as [number,number,number]);controls.update();}};
+  apiRef.current={zoom(factor){camera.position.sub(controls.target).multiplyScalar(factor).add(controls.target);controls.update();},view(name){controls.target.set(-.8,2,.8);camera.position.set(...(name==='top'?[-.8,21,.81]:name==='front'?[-.8,9,21]:name==='side'?[-21,9,.8]:[-9,14,19]) as [number,number,number]);controls.update();}};
   let lastPose='',lastTime=0;
   function recordCamera(now:number,force=false){
    if(!force&&now-lastTime<300)return;
@@ -168,12 +156,12 @@ export default function World(props:Props){
   let frame=0,previous=performance.now();const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const draw=(now:number)=>{const dt=Math.min((now-previous)/1000,.1);previous=now;const blend=reduce?1:1-Math.exp(-dt*8),state=live.current;matrix.rotation.x=THREE.MathUtils.lerp(matrix.rotation.x,matrixAngle(state.cells.filter((_,i)=>!state.hidden.includes(i))),blend);
    sliders.forEach(slider=>{
-    const value=state.factors[slider.kind][slider.index][slider.factor],length=slider.end-slider.start;
-    slider.thumb.position[slider.axis]=slider.start+value*length;
-    slider.fill.scale[slider.axis]=Math.max(.001,value*length);slider.fill.position[slider.axis]=slider.start+value*length/2;
+    const value=state.factors[slider.kind][slider.index][slider.factor],delta=slider.end-slider.start;
+    slider.thumb.position[slider.axis]=slider.start+value*delta;
+    slider.fill.scale[slider.axis]=Math.max(.001,value*Math.abs(delta));slider.fill.position[slider.axis]=slider.start+value*delta/2;
     const highlighted=state.active?.kind===slider.kind&&state.active.index===slider.index&&(state.active.factor===undefined||state.active.factor===slider.factor);
     slider.mat.emissive.setHex(highlighted?0x008bb6:0);slider.mat.emissiveIntensity=.7;slider.thumb.scale.setScalar(highlighted?1.25:1);
-    const signature=`${value.toFixed(2)}:${highlighted}`;if(signature!==slider.signature){slider.signature=signature;slider.ctx.clearRect(0,0,512,128);slider.ctx.fillStyle=highlighted?'#00738f':'#193e60';slider.ctx.textAlign='center';slider.ctx.font='bold 39px Arial';slider.ctx.fillText(`F${slider.factor+1} ${value.toFixed(2)}`,256,82);slider.texture.needsUpdate=true;}
+
    });
    tiles.forEach((t,i)=>{const c=state.cells[i];const held=state.hidden.includes(i), unknown=held&&!state.evaluated, muted=!held&&state.evaluated;
     const angle=unknown?(reduce?0:Math.sin(now*.0016+i)*.12)-matrix.rotation.x:cellAngle(c);
@@ -185,9 +173,9 @@ export default function World(props:Props){
     t.truth=THREE.MathUtils.lerp(t.truth,c.truth,blend);t.prediction=THREE.MathUtils.lerp(t.prediction,c.prediction,blend);t.weights.forEach((weight,j)=>{weight.visible=state.mode==='edges'&&!(unknown&&j===0);
     (weight.material as THREE.MeshStandardMaterial).color.set(muted?(j?'#969da5':'#b5bbc0'):j?(held?'#7040ad':'#ffc52e'):'#1479ed');const depth=(j===0?t.truth:t.prediction)/5*.525;weight.scale.z=depth;weight.position.z=j===0?-.525+depth/2:.525-depth/2;});
     t.decal.scale.setScalar(state.mode==='edges'?1.05/1.01:1);paint(t,i);
-   });controls.update();aisle.visible=camera.position.z>-7;recordCamera(now);renderer.render(scene,camera);frame=requestAnimationFrame(draw);
+   });controls.update();room.update(camera);recordCamera(now);renderer.render(scene,camera);frame=requestAnimationFrame(draw);
   };frame=requestAnimationFrame(draw);
-  return()=>{disposed=true;controls.removeEventListener('end',endOrbit);cancelAnimationFrame(frame);observer.disconnect();controls.dispose();renderer.domElement.removeEventListener('pointerdown',down,true);renderer.domElement.removeEventListener('pointerup',up,true);renderer.domElement.removeEventListener('pointermove',move,true);renderer.domElement.removeEventListener('pointerleave',leave);renderer.domElement.removeEventListener('pointercancel',cancel,true);geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());renderer.dispose();el.removeChild(renderer.domElement);apiRef.current=null;};
+  return()=>{room.dispose();disposed=true;controls.removeEventListener('end',endOrbit);cancelAnimationFrame(frame);observer.disconnect();controls.dispose();renderer.domElement.removeEventListener('pointerdown',down,true);renderer.domElement.removeEventListener('pointerup',up,true);renderer.domElement.removeEventListener('pointermove',move,true);renderer.domElement.removeEventListener('pointerleave',leave);renderer.domElement.removeEventListener('pointercancel',cancel,true);geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());renderer.dispose();el.removeChild(renderer.domElement);apiRef.current=null;};
  },[apiRef]);
  return error?<FlatBoard {...props}/>:<div ref={host} className={ui.canvas}/>;
 }
@@ -206,7 +194,7 @@ function FlatBoard(props:Props){
   const item=(kind==='rows'?people:movies)[index];
   return <div className={ui.flatCard} key={item.id}><img src={item.image} alt=""/><b>{item.name}</b>{factors[kind][index].map((v,f)=><label key={f}>F{f+1}<input aria-label={item.name+' desk factor '+(f+1)} disabled={evaluated} type="range" min="0" max="1" step=".01" value={v} onChange={e=>props.onFactor(kind,index,f,Number(e.target.value))}/></label>)}</div>;
  };
- return <div className={ui.flat}><div className={ui.dvdAisle} aria-hidden="true">{shelves.map(src=><img key={src} src={src} alt=""/>)}</div><p>Top-down board · 3D is unavailable on this device.</p>
+ return <div className={ui.flat}><p>Top-down board · 3D is unavailable on this device.</p>
  <div className={ui.flatGrid}>{people.map((person,r)=><div key={person.id} className={ui.flatRow}>{card('rows',r)}{movies.map((movie,c)=>{
   const i=r*5+c,cell=cells[i],held=hidden.includes(i);
   return <button key={movie.id} aria-label={person.name+' × '+movie.name} aria-pressed={props.selected===i} onClick={()=>props.onSelect(i)} style={{background:held&&!evaluated||!held&&evaluated?'#c6c7cc':errorColor(cell.prediction-cell.truth)}}><RatingFace cell={cell} mode={mode} held={held} evaluated={evaluated}/></button>;
