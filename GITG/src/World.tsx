@@ -4,6 +4,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { matrixAngle, cellAngle, errorColor } from "./model.mjs";
 import { paintRatings } from "./ratings";
 import type { Mode } from "./ratings";
+import { shelves } from "./rentalShelf";
 import ui from "./game.module.css";
 type FactorKind = 'rows' | 'cols';
 type Card = {id:string; name:string; image:string};
@@ -23,19 +24,42 @@ export default function World(props:Props){
  useEffect(()=>{
   const el=host.current!;let renderer:THREE.WebGLRenderer;
   try{renderer=new THREE.WebGLRenderer({antialias:true});}catch{queueMicrotask(()=>setError('This device could not start 3D. Enable WebGL or try another browser.'));return;}
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));renderer.setClearColor(0xeaf1f8);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));renderer.setClearColor(0xe9d9c1);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
   renderer.domElement.setAttribute('aria-label','3D balance matrix. Drag to orbit above the desk. Scroll or pinch to zoom. Tap a tile or its handles to select it.');el.appendChild(renderer.domElement);
-  const scene=new THREE.Scene();scene.fog=new THREE.Fog(0xeaf1f8,24,45);
+  const scene=new THREE.Scene();scene.fog=new THREE.Fog(0xe9d9c1,24,45);
   const camera=new THREE.PerspectiveCamera(40,1,.1,80);camera.position.set(-5,17,15);
   const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(-.8,2,.8);controls.enableDamping=true;controls.minDistance=9;controls.maxDistance=30;controls.maxPolarAngle=Math.PI/2-.04;controls.enablePan=false;
-  scene.add(new THREE.HemisphereLight(0xffffff,0x7391ae,2.6));
-  const light=new THREE.DirectionalLight(0xffffff,3.5);light.position.set(-5,13,8);light.castShadow=true;light.shadow.mapSize.set(2048,2048);Object.assign(light.shadow.camera,{left:-9,right:9,top:10,bottom:-10});light.shadow.bias=-.001;scene.add(light);
+  scene.add(new THREE.HemisphereLight(0xfff4de,0x968173,2.2));
+  const light=new THREE.DirectionalLight(0xffefd4,3.1);light.position.set(-5,13,8);light.castShadow=true;light.shadow.mapSize.set(2048,2048);Object.assign(light.shadow.camera,{left:-9,right:9,top:10,bottom:-10});light.shadow.bias=-.001;scene.add(light);
   const materials:THREE.Material[]=[],geometries:THREE.BufferGeometry[]=[],textures:THREE.Texture[]=[];
   function material(color:number,metalness=.05){const m=new THREE.MeshStandardMaterial({color,roughness:.55,metalness});materials.push(m);return m;}
-  const navy=material(0x193e60,.5),floorMat=material(0xdde7f1);
+  const navy=material(0x193e60,.5),floorMat=material(0x82776a);
   function box(parent:THREE.Object3D,w:number,h:number,d:number,x:number,y:number,z:number,m:THREE.Material){const g=new THREE.BoxGeometry(w,h,d);geometries.push(g);const mesh=new THREE.Mesh(g,m);mesh.position.set(x,y,z);mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh;}
   function label(text:string,parent:THREE.Object3D,x:number,y:number,z:number,width=1.1){const cv=document.createElement('canvas');cv.width=256;cv.height=64;const ctx=cv.getContext('2d')!;ctx.fillStyle='#193e60';ctx.font='bold 28px Arial';ctx.textAlign='center';ctx.fillText(text,128,42);const tx=new THREE.CanvasTexture(cv);textures.push(tx);const mt=new THREE.SpriteMaterial({map:tx,depthWrite:false});materials.push(mt);const sprite=new THREE.Sprite(mt);sprite.scale.set(width,width/4,1);sprite.position.set(x,y,z);parent.add(sprite);}
-  box(scene,200,.15,200,0,-.2,0,floorMat);box(scene,13.8,.16,13.1,-1,0,1.25,material(0xf5f8fc));
+  // The tabletop keeps the original slider plane and board pivot.
+  box(scene,160,.12,160,0,-3.72,0,floorMat);
+  const oak=material(0xaa7750), darkWood=material(0x70503c);
+  box(scene,13.8,.36,13.1,-1,-.10,1.25,oak);
+  box(scene,13.1,.045,12.4,-1,.095,1.25,material(0xf1e8d8));
+  for(const x of [-7.26,5.26])for(const z of [-4.67,7.17]){
+   box(scene,.38,3.42,.38,x,-1.97,z,darkWood);
+  }
+  // The aisle sits beyond the board and drops out of view when orbiting behind it.
+  const aisle=new THREE.Group();scene.add(aisle);
+  const shelfFrame=material(0x71513e),lampMetal=material(0x3b4946);
+  const glow=new THREE.MeshBasicMaterial({color:0xffdf9a});materials.push(glow);
+  for(const [bay,image] of shelves.entries()){
+   const x=(bay-1)*6.28;
+   box(aisle,6.24,6.5,1.05,x,-.4,-10.3,shelfFrame);
+   const map=new THREE.TextureLoader().load(image);
+   map.colorSpace=THREE.SRGBColorSpace;map.anisotropy=renderer.capabilities.getMaxAnisotropy();textures.push(map);
+   const face=new THREE.MeshStandardMaterial({map,roughness:.85});materials.push(face);
+   box(aisle,6.04,5.7,.04,x,-.12,-9.75,face);
+   box(aisle,5.95,.18,.65,x,2.87,-9.55,lampMetal);
+   box(aisle,5.68,.08,.12,x,2.81,-9.19,glow);
+  }
+  const aisleLight=new THREE.PointLight(0xffce8a,85,26,2);
+  aisleLight.position.set(0,5,-7);aisle.add(aisleLight);
   box(scene,.23,3.35,.5,-3.5,1.75,0,navy);box(scene,.23,3.35,.5,3.5,1.75,0,navy);
   // The shared axle is the parent pivot, underneath the complete board.
   const matrix=new THREE.Group();matrix.position.y=3.42;scene.add(matrix);
@@ -161,7 +185,7 @@ export default function World(props:Props){
     t.truth=THREE.MathUtils.lerp(t.truth,c.truth,blend);t.prediction=THREE.MathUtils.lerp(t.prediction,c.prediction,blend);t.weights.forEach((weight,j)=>{weight.visible=state.mode==='edges'&&!(unknown&&j===0);
     (weight.material as THREE.MeshStandardMaterial).color.set(muted?(j?'#969da5':'#b5bbc0'):j?(held?'#7040ad':'#ffc52e'):'#1479ed');const depth=(j===0?t.truth:t.prediction)/5*.525;weight.scale.z=depth;weight.position.z=j===0?-.525+depth/2:.525-depth/2;});
     t.decal.scale.setScalar(state.mode==='edges'?1.05/1.01:1);paint(t,i);
-   });controls.update();recordCamera(now);renderer.render(scene,camera);frame=requestAnimationFrame(draw);
+   });controls.update();aisle.visible=camera.position.z>-7;recordCamera(now);renderer.render(scene,camera);frame=requestAnimationFrame(draw);
   };frame=requestAnimationFrame(draw);
   return()=>{disposed=true;controls.removeEventListener('end',endOrbit);cancelAnimationFrame(frame);observer.disconnect();controls.dispose();renderer.domElement.removeEventListener('pointerdown',down,true);renderer.domElement.removeEventListener('pointerup',up,true);renderer.domElement.removeEventListener('pointermove',move,true);renderer.domElement.removeEventListener('pointerleave',leave);renderer.domElement.removeEventListener('pointercancel',cancel,true);geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());renderer.dispose();el.removeChild(renderer.domElement);apiRef.current=null;};
  },[apiRef]);
@@ -182,7 +206,7 @@ function FlatBoard(props:Props){
   const item=(kind==='rows'?people:movies)[index];
   return <div className={ui.flatCard} key={item.id}><img src={item.image} alt=""/><b>{item.name}</b>{factors[kind][index].map((v,f)=><label key={f}>F{f+1}<input aria-label={item.name+' desk factor '+(f+1)} disabled={evaluated} type="range" min="0" max="1" step=".01" value={v} onChange={e=>props.onFactor(kind,index,f,Number(e.target.value))}/></label>)}</div>;
  };
- return <div className={ui.flat}><p>Top-down board · 3D is unavailable on this device.</p>
+ return <div className={ui.flat}><div className={ui.dvdAisle} aria-hidden="true">{shelves.map(src=><img key={src} src={src} alt=""/>)}</div><p>Top-down board · 3D is unavailable on this device.</p>
  <div className={ui.flatGrid}>{people.map((person,r)=><div key={person.id} className={ui.flatRow}>{card('rows',r)}{movies.map((movie,c)=>{
   const i=r*5+c,cell=cells[i],held=hidden.includes(i);
   return <button key={movie.id} aria-label={person.name+' × '+movie.name} aria-pressed={props.selected===i} onClick={()=>props.onSelect(i)} style={{background:held&&!evaluated||!held&&evaluated?'#c6c7cc':errorColor(cell.prediction-cell.truth)}}><RatingFace cell={cell} mode={mode} held={held} evaluated={evaluated}/></button>;
