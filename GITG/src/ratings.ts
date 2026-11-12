@@ -35,6 +35,12 @@ export function paintRatings(ctx:CanvasRenderingContext2D,mode:Mode,truth:number
   }
   const x=mode==='bars'?(j?332:162):256;
   const y=mode==='bars'?446:mode==='stars'?(j?355:198):(j?473:60);
-  ctx.font='bold 45px Arial';ctx.lineWidth=3;ctx.strokeStyle='#ffffffeb';ctx.strokeText(label+' '+value,x,y);ctx.fillStyle='#243144';ctx.fillText(label+' '+value,x,y);
+  ctx.lineWidth=2.5;ctx.strokeStyle='#ffffffeb';
+  if(mode==='bars'){
+   ctx.font='900 32px Arial Black,Arial,sans-serif';ctx.strokeText(label,x,435);ctx.fillStyle='#17232e';ctx.fillText(label,x,435);
+   ctx.font='900 56px Arial Black,Arial,sans-serif';ctx.strokeText(value,x,488);ctx.fillText(value,x,488);
+  }else{
+   ctx.font='900 56px Arial Black,Arial,sans-serif';ctx.strokeText(label+' '+value,x,y);ctx.fillStyle='#17232e';ctx.fillText(label+' '+value,x,y);
+  }
  });
 }
