@@ -27,7 +27,7 @@ The Sites Worker is authoritative. D1 stores room state, revision, and the actio
 
 CSV exports include server timestamp, command ID, revision, participant ID, attempt, input command, row/column order, all factor values, predictions, and known-rating RMSE. Hidden ratings are revealed only after evaluation. Camera navigation is not in this edition's shared log.
 
-Restart begins a new attempt with fresh row/column ordering while preserving participant ID and log history. Maya's two hidden ratings remain After Hours = 4 and Peach Season = 2; both are excluded from the solver and known-rating error. Cell stars and numbers omit the fixed base star. Guesses and ratings in the monitor HUD retain the full 1–5 scale.
+Restart begins a new attempt with fresh row/column ordering while preserving participant ID and log history. Maya's two hidden ratings remain After Hours = 3 and Peach Season = 1; both are excluded from the solver and known-rating error. All ratings, predictions, stars, bars, edge weights, results, and exported numbers use the same 0–4 scale. Existing saved sessions and historical log exports are normalized from the older 1–5 scale.
 
 ## Development
 

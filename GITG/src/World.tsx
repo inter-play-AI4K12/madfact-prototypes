@@ -171,7 +171,7 @@ export default function World(props:Props){
     const highlighted=i===state.selected||i===hovered||affected;
     t.handleMat.color.setHex(highlighted?0x00b7dc:0x63809b);t.handleMat.emissive.setHex(highlighted?0x008bb6:0);t.handleMat.emissiveIntensity=.55;t.handles.forEach(handle=>handle.scale.setScalar(highlighted?1.35:1));
     t.truth=THREE.MathUtils.lerp(t.truth,c.truth,blend);t.prediction=THREE.MathUtils.lerp(t.prediction,c.prediction,blend);t.weights.forEach((weight,j)=>{weight.visible=state.mode==='edges'&&!(unknown&&j===0);
-    (weight.material as THREE.MeshStandardMaterial).color.set(muted?(j?'#969da5':'#b5bbc0'):j?(held?'#7040ad':'#ffc52e'):'#1479ed');const depth=(j===0?t.truth:t.prediction)/5*.525;weight.scale.z=depth;weight.position.z=j===0?-.525+depth/2:.525-depth/2;});
+    (weight.material as THREE.MeshStandardMaterial).color.set(muted?(j?'#969da5':'#b5bbc0'):j?(held?'#7040ad':'#ffc52e'):'#1479ed');const depth=(j===0?t.truth:t.prediction)/4*.525;weight.scale.z=depth;weight.position.z=j===0?-.525+depth/2:.525-depth/2;});
     t.decal.scale.setScalar(state.mode==='edges'?1.05/1.01:1);paint(t,i);
    });controls.update();room.update(camera);recordCamera(now);renderer.render(scene,camera);frame=requestAnimationFrame(draw);
   };frame=requestAnimationFrame(draw);

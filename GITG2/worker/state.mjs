@@ -1,11 +1,12 @@
 import {makeChallenge,fitStep} from '../src/challenge.mjs';
 import {factorCells,rmse} from '../src/model.mjs';
-export function initialState(){return {lab:makeChallenge(),mode:'stars',selected:0,evaluated:false,running:false,step:0,attempt:1,participant:'1',active:null};}
-export function metrics(state){const cells=factorCells(state.lab.truths,state.lab.rows,state.lab.cols),[a,b]=state.lab.hidden.map(i=>({...cells[i],index:i}));return {known_rmse:rmse(cells.filter((_,i)=>!state.lab.hidden.includes(i))),predictions:cells.map(c=>c.prediction),recommended:Math.abs(a.prediction-b.prediction)<1e-8?null:a.prediction>b.prediction?a.index:b.index};}
-export function publicState(state){return {...state,lab:{...state.lab,truths:state.lab.truths.map((v,i)=>!state.evaluated&&state.lab.hidden.includes(i)?1:v)},metrics:metrics(state)};}
+export function initialState(){return {ratingScale:'0-4',lab:makeChallenge(),mode:'stars',selected:0,evaluated:false,running:false,step:0,attempt:1,participant:'1',active:null};}
+export function normalizeState(state){return state.ratingScale==='0-4'?state:{...state,ratingScale:'0-4',lab:{...state.lab,truths:state.lab.truths.map(v=>v-1)}};}
+export function metrics(state){state=normalizeState(state);const cells=factorCells(state.lab.truths,state.lab.rows,state.lab.cols),[a,b]=state.lab.hidden.map(i=>({...cells[i],index:i}));return {rating_scale:'0-4',known_rmse:rmse(cells.filter((_,i)=>!state.lab.hidden.includes(i))),predictions:cells.map(c=>c.prediction),recommended:Math.abs(a.prediction-b.prediction)<1e-8?null:a.prediction>b.prediction?a.index:b.index};}
+export function publicState(state){state=normalizeState(state);return {...state,lab:{...state.lab,truths:state.lab.truths.map((v,i)=>!state.evaluated&&state.lab.hidden.includes(i)?0:v)},metrics:metrics(state)};}
 const fail=(message,status=400)=>{throw Object.assign(new Error(message),{status});};
 export function applyCommand(state,command){
- const s=structuredClone(state),c=command;
+ const s=structuredClone(normalizeState(state)),c=command;
  if(!c||typeof c.type!=='string')fail('Choose an action.');
  switch(c.type){
   case 'slider':{
@@ -27,3 +28,8 @@ export function applyCommand(state,command){
  return s;
 }
 function makeCanonical(){return makeChallenge(()=>.999999);}
+
+export function normalizeLogDetails(details){
+ if(details.rating_scale==='0-4')return details;
+ return {...details,rating_scale:'0-4',...(details.predictions?{predictions:details.predictions.map(v=>v-1)}:{}),...(details.revealed?{revealed:details.revealed.map(v=>({...v,rating:v.rating-1}))}:{})};
+}

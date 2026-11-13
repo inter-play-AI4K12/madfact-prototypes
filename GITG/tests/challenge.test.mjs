@@ -25,8 +25,8 @@ test('the wrong initial recommendation reverses after fitting seen ratings acros
     layouts.add(JSON.stringify([lab.rowOrder, lab.colOrder]));
     assert.deepEqual(lab.hidden.map(i => lab.rowOrder[Math.floor(i / 5)]), [0, 0]);
     assert.deepEqual(lab.hidden.map(i => lab.colOrder[i % 5]), [0, 1]);
-    assert.deepEqual(lab.hidden.map(i => lab.truths[i]), [4, 2]);
-    assert.ok(lab.truths.every(t => Number.isInteger(t) && t >= 1 && t <= 5));
+    assert.deepEqual(lab.hidden.map(i => lab.truths[i]), [3, 1]);
+    assert.ok(lab.truths.every(t => Number.isInteger(t) && t >= 0 && t <= 4));
     const initial = score(lab);
     assert.ok(initial.candidates[1] - initial.candidates[0] > 2);
     let previous = initial.seen;
@@ -38,8 +38,8 @@ test('the wrong initial recommendation reverses after fitting seen ratings acros
     }
     const final = score(lab);
     assert.ok(initial.seen > 1.5 && final.seen < 0.18);
-    assert.ok(Math.abs(final.candidates[0] - 4) < 0.15);
-    assert.ok(Math.abs(final.candidates[1] - 2) < 0.02);
+    assert.ok(Math.abs(final.candidates[0] - 3) < 0.15);
+    assert.ok(Math.abs(final.candidates[1] - 1) < 0.02);
   }
   assert.ok(layouts.size > 50);
 });

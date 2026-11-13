@@ -1,4 +1,4 @@
-import {initialState,applyCommand,publicState,metrics} from './state.mjs';
+import {initialState,applyCommand,publicState,metrics,normalizeLogDetails} from './state.mjs';
 const json=(data,status=200)=>Response.json(data,{status,headers:{'cache-control':'no-store','x-content-type-options':'nosniff'}});
 const random=(n)=>Array.from(crypto.getRandomValues(new Uint8Array(n)),v=>v.toString(16).padStart(2,'0')).join('');
 const snapshot=row=>({code:row.code,revision:row.revision,updatedAt:row.updated_at,state:publicState(JSON.parse(row.state))});
@@ -26,7 +26,7 @@ export async function api(request,env){
   if(parts[3]==='logs'&&request.method==='GET'){
    const {results}=await db.prepare('SELECT id,command_id,revision,time,event,details FROM events WHERE room=? ORDER BY id').bind(code).all();
    const quote=v=>'"'+String(v??'').replaceAll('"','""')+'"';
-   const csv=[['room','sequence','command_id','revision','timestamp','event','details_json'],...results.map(e=>[code,e.id,e.command_id,e.revision,e.time,e.event,e.details])].map(a=>a.map(quote).join(',')).join('\r\n');
+   const csv=[['room','sequence','command_id','revision','timestamp','event','details_json'],...results.map(e=>[code,e.id,e.command_id,e.revision,e.time,e.event,JSON.stringify(normalizeLogDetails(JSON.parse(e.details)))])].map(a=>a.map(quote).join(',')).join('\r\n');
    return new Response(csv,{headers:{'content-type':'text/csv;charset=utf-8','content-disposition':`attachment; filename="GITG2-${code}.csv"`,'cache-control':'no-store'}});
   }
   if(parts[3]==='commands'&&request.method==='POST'){

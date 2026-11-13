@@ -9,7 +9,7 @@ const ratings = [
   [5, 3, 3, 4, 5],
   [4, 3, 2, 3, 4],
   [4, 2, 3, 3, 4],
-];
+].map(row => row.map(rating => rating - 1)); // Canonical ratings are 0–4.
 
 const startingRows = [
   [0.95, 0.75], [0.20, 0.50], [0.75, 0.95], [0.65, 0.05], [0.95, 0.55],
@@ -56,7 +56,7 @@ export function fitStep(lab, step) {
     const cell = isRow ? index * count + i : i * count + index;
     if (lab.hidden.includes(cell)) return;
     design.push(pair);
-    targets.push((lab.truths[cell] - 1) / 2);
+    targets.push(lab.truths[cell] / 2);
   });
   const fitted = solveBoundedPair(design, targets, lab[axis][index]);
   const pairs = lab[axis].slice();

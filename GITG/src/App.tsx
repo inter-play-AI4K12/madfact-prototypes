@@ -19,7 +19,7 @@ let boot:Promise<{lab:Lab;session:Session}>|undefined;
 function begin(){
  return boot??=(async()=>{
   const session=await getSession(),lab:Lab=makeChallenge();
-  session.log('run_started',{version:'GITG-2',row_order:lab.rowOrder.map(i=>people[i].id),column_order:lab.colOrder.map(i=>movies[i].id),hidden_cells:lab.hidden,visible_ratings:lab.truths.map((v,i)=>lab.hidden.includes(i)?null:v),starting_factors:{rows:lab.rows,cols:lab.cols},starting_predictions:factorCells(lab.truths,lab.rows,lab.cols).map((c:Cell)=>c.prediction),mode:'stars'});
+  session.log('run_started',{version:'GITG-3',rating_scale:'0-4',row_order:lab.rowOrder.map(i=>people[i].id),column_order:lab.colOrder.map(i=>movies[i].id),hidden_cells:lab.hidden,visible_ratings:lab.truths.map((v,i)=>lab.hidden.includes(i)?null:v),starting_factors:{rows:lab.rows,cols:lab.cols},starting_predictions:factorCells(lab.truths,lab.rows,lab.cols).map((c:Cell)=>c.prediction),mode:'stars'});
   return {lab,session};
  })();
 }
@@ -56,7 +56,7 @@ function Game({initial,session}:{initial:Lab;session:Session}){
  useEffect(()=>{if(modal!=='log')return;const i=setInterval(()=>refresh(x=>x+1),700);return()=>clearInterval(i);},[modal]);
  useEffect(()=>{const page=()=>session.log('page_hidden',{visibility:document.visibilityState});document.addEventListener('visibilitychange',page);return()=>document.removeEventListener('visibilitychange',page);},[session]);
  function update(next:Lab){live.current=next;setLab(next);}
- function snapshot(l:Lab){const c:Cell[]=factorCells(l.truths,l.rows,l.cols);return {rows:l.rows,cols:l.cols,known_rmse:rmse(c.filter((_,i)=>!l.hidden.includes(i))),predictions:c.map(v=>v.prediction)};}
+ function snapshot(l:Lab){const c:Cell[]=factorCells(l.truths,l.rows,l.cols);return {rating_scale:'0-4',rows:l.rows,cols:l.cols,known_rmse:rmse(c.filter((_,i)=>!l.hidden.includes(i))),predictions:c.map(v=>v.prediction)};}
  function pick(i:number){select(i);trace('tile_selected',{cell:i,person:cast[Math.floor(i/5)].id,movie:films[i%5].id});}
  function stop(reason:string){if(running)trace('optimize_paused',{reason,step:step.current});setRunning(false);setActive(null);}
  function change(kind:Kind,index:number,factor:number,value:number,source:string){
